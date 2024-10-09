@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class DiaryRepository {
     private final Map<Long, Diary> storage = new ConcurrentHashMap<>();
+    private final Map<Long, Diary> trashStorage = new ConcurrentHashMap<>();
     private final AtomicLong numbering = new AtomicLong();
 
     final long count() {
@@ -18,6 +19,10 @@ public class DiaryRepository {
 
     final boolean existById(Long id) {
         return storage.containsKey(id);
+    }
+
+    final boolean existTrashById(Long id) {
+        return trashStorage.containsKey(id);
     }
 
     final Diary findDiaryByMaxId() {
@@ -63,7 +68,12 @@ public class DiaryRepository {
     }
 
     final void delete(Long id) {
+        trashStorage.put(id, storage.get(id));
         storage.remove(id);
     }
 
+    final void restore(Long id) {
+        storage.put(id, trashStorage.get(id));
+        trashStorage.remove(id);
+    }
 }
