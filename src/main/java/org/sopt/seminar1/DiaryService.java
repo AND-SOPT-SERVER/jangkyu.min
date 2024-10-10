@@ -6,7 +6,7 @@ import java.util.List;
 public class DiaryService {
     private final DiaryRepository diaryRepository = new DiaryRepository();
 
-    // String 자료형을 Long 으로 바꿔주세요.
+    // String 자료형을 Long 으로 바꿔주세요
     private Long convertStringToLong(String input) {
         try {
             return Long.parseLong(input);
@@ -17,21 +17,34 @@ public class DiaryService {
     }
 
     // 유저가 오늘 일기를 썼나요
-    private boolean isUserWrite() {
+    private boolean isUserWriteToday() {
         return diaryRepository.findDiaryByMaxId().getWriteTime().equals(LocalDate.now());
+    }
+
+    // 다이어리 수정 저장소를 확인하고 필요하다면 초기화 해주세요
+    private boolean canPatchDiary() {
+        long patchCount = diaryRepository.countPatchDiaries();
+
+        // 일기 수정 기록이 존재하지만, 해당 기록이 오늘 작성된 것이 아닌 다른 날 작성된 것이라면 수정 저장소를 초기화 할 거에요
+        if(patchCount == 1 && !diaryRepository.findFirstValueInPatch().getWriteTime().equals(LocalDate.now())) {
+            diaryRepository.clearPatch();
+        }
+
+        return patchCount < 2;
     }
 
     void writeDiary(final String body) {
         if(body.length() > 30) {
             throw new IllegalArgumentException();
         }
+
         // 다이어리 객체를 만들어줍니다.
         final Diary diary = new Diary(body, LocalDate.now());
 
-        if(diaryRepository.count() == 0) {
+        if(diaryRepository.countDiaries() == 0) {
             diaryRepository.save(diary);
         } else {
-            if(isUserWrite()) {
+            if(isUserWriteToday()) {
                 System.err.println("일기는 하루에 하나만 작성할 수 있어요.");
             } else {
                 diaryRepository.save(diary);
@@ -44,11 +57,21 @@ public class DiaryService {
     }
 
     void patchDiary(String id, String body) {
-        Long diaryId = convertStringToLong(id);
+        // 일기 수정 가능 여부 검증
+        if(!canPatchDiary()) {
+            System.err.println("일기는 하루에 최대 두 번만 수정할 수 있어요.");
+            return;
+        }
 
-        if(diaryRepository.existById(diaryId)) {
+        // 다이어리 검증
+        Long diaryId = convertStringToLong(id);
+        if(diaryId == null) {
+            return;
+        }
+
+        if(diaryRepository.existsInStorage(diaryId)) {
             diaryRepository.patch(
-                    diaryId, new Diary(body, LocalDate.now())
+                diaryId, new Diary(body, LocalDate.now())
             );
         } else {
             System.err.println("존재하지 않는 다이어리 입니다.");
@@ -57,8 +80,11 @@ public class DiaryService {
 
     void deleteDiary(String id) {
         Long diaryId = convertStringToLong(id);
+        if(diaryId == null) {
+            return;
+        }
 
-        if(diaryRepository.existById(diaryId)) {
+        if(diaryRepository.existsInStorage(diaryId)) {
             diaryRepository.delete(diaryId);
         } else {
             System.err.println("존재하지 않는 다이어리 입니다.");
@@ -67,8 +93,11 @@ public class DiaryService {
 
     void restoreDiary(String id) {
         Long diaryId = convertStringToLong(id);
+        if(diaryId == null) {
+            return;
+        }
 
-        if(diaryRepository.existTrashById(diaryId)) {
+        if(diaryRepository.existsInTrash(diaryId)) {
             diaryRepository.restore(diaryId);
         } else {
             System.err.println("휴지통에 존재하지 않는 다이어리 입니다.");
