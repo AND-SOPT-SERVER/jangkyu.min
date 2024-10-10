@@ -1,6 +1,5 @@
 package org.sopt.seminar1;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,18 +10,28 @@ import java.util.concurrent.atomic.AtomicLong;
 public class DiaryRepository {
     private final Map<Long, Diary> storage = new ConcurrentHashMap<>();
     private final Map<Long, Diary> trashStorage = new ConcurrentHashMap<>();
+    private final Map<Long, Diary> patchStorage = new ConcurrentHashMap<>();
     private final AtomicLong numbering = new AtomicLong();
+    private final AtomicLong numberingPatch = new AtomicLong();
 
-    final long count() {
+    final long countDiaries() {
         return storage.size();
     }
 
-    final boolean existById(Long id) {
+    final long countPatchDiaries() {
+        return patchStorage.size();
+    }
+
+    final boolean existsInStorage(Long id) {
         return storage.containsKey(id);
     }
 
-    final boolean existTrashById(Long id) {
+    final boolean existsInTrash(Long id) {
         return trashStorage.containsKey(id);
+    }
+
+    final Diary findFirstValueInPatch() {
+        return patchStorage.values().iterator().next();
     }
 
     final Diary findDiaryByMaxId() {
@@ -64,12 +73,19 @@ public class DiaryRepository {
     }
 
     final void patch(Long id, Diary diary) {
+        final long patchId = numberingPatch.addAndGet(1);
+
         storage.put(id, diary);
+        patchStorage.put(patchId, diary);
     }
 
     final void delete(Long id) {
         trashStorage.put(id, storage.get(id));
         storage.remove(id);
+    }
+
+    final void clearPatch() {
+        patchStorage.clear();
     }
 
     final void restore(Long id) {
