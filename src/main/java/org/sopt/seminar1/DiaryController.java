@@ -1,5 +1,6 @@
 package org.sopt.seminar1;
 
+import java.io.IOException;
 import java.util.List;
 
 public class DiaryController {
@@ -10,11 +11,13 @@ public class DiaryController {
         return status;
     }
 
-    void boot() {
+    void boot() throws IOException {
+        diaryService.loadDiary();
         this.status = Status.RUNNING;
     }
 
-    void finish() {
+    void finish() throws IOException {
+        diaryService.saveDiary();
         this.status = Status.FINISHED;
     }
 
