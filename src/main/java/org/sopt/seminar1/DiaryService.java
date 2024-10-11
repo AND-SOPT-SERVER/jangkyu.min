@@ -3,6 +3,7 @@ package org.sopt.seminar1;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DiaryService {
     private final DiaryRepository diaryRepository = new DiaryRepository();
@@ -34,9 +35,29 @@ public class DiaryService {
         return patchCount < 2;
     }
 
+    private int codePointLength(String body) {
+        AtomicInteger counter = new AtomicInteger(0);
+
+        body.codePoints().forEach(codepoint -> {
+            if(codepoint == 0x200D) {
+                // ZWJ 경우
+                counter.decrementAndGet();
+            } else if(0x1F3FB <= codepoint && codepoint <= 0x1F3FF) {
+                // 이모지 수정자의 경우 그냥 넘어갑니다.
+            } else {
+                // 그 외의 경우
+                counter.incrementAndGet();
+            }
+        });
+
+        System.out.println(counter.intValue());
+        return counter.intValue();
+    }
+
     void writeDiary(final String body) {
-        if(body.length() > 30) {
-            throw new IllegalArgumentException();
+        if(codePointLength(body) > 30) {
+            System.err.println("일기는 30자를 초과할 수 없습니다.");
+            return;
         }
 
         // 다이어리 객체를 만들어줍니다.
