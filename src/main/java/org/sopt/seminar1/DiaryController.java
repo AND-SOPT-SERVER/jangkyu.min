@@ -27,7 +27,6 @@ public class DiaryController {
     }
 
     final void post(final String body) {
-        // 클라이언트로부터 넘겨 받은 값을 전달만 해주면 돼요잉
         diaryService.writeDiary(body);
     }
 
