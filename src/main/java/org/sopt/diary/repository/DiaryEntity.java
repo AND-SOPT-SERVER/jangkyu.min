@@ -24,14 +24,16 @@ public class DiaryEntity {
 
     }
 
-    public DiaryEntity(Long id, String title, String content, LocalDate writeDate) {
-        this.id = id;
+    // post 시 id 값을 null 로 만들면서 객체를 생성하기 위한 생성자
+    public DiaryEntity(String title, String content, LocalDate writeDate) {
         this.title = title;
         this.content = content;
         this.writeDate = writeDate;
     }
 
-    public DiaryEntity(String title, String content, LocalDate writeDate) {
+    // patch 시 id 값을 유지하면서 객체를 생성하기 위한 생성자
+    public DiaryEntity(Long id, String title, String content, LocalDate writeDate) {
+        this.id = id;
         this.title = title;
         this.content = content;
         this.writeDate = writeDate;
