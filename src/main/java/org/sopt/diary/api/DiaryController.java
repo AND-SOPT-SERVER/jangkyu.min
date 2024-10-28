@@ -18,10 +18,9 @@ public class DiaryController {
         this.diaryService = diaryService;
     }
 
-    // 컨트롤러의 역할은 클라이언트로부텨터 요청을 받고 서비스에게 넘겨주는 역할이라능
     @PostMapping("/diary")
     void postDiary(@RequestBody DiaryCreateRequest diaryCreateRequest) {
-        // DTO validation 시간
+        // DTO validation
         if(diaryCreateRequest.getContent().length() > 30) {
             System.err.println("30자 초과 !");
             return;
@@ -29,6 +28,7 @@ public class DiaryController {
 
         diaryService.createDiary(
                 new Diary(
+                        null,
                         diaryCreateRequest.getTitle(),
                         diaryCreateRequest.getContent(),
                         LocalDate.now()
@@ -67,7 +67,7 @@ public class DiaryController {
 
     @PatchMapping("/diary/{id}")
     void patchDiary(@PathVariable Long id, @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
-        // DTO validation 시간
+        // DTO validation
         if(diaryUpdateRequest.getContent().length() > 30) {
             System.err.println("30자 초과 !");
             return;

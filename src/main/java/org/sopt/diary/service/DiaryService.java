@@ -36,7 +36,12 @@ public class DiaryService {
 
         for(DiaryEntity diaryEntity : diaryEntityList) {
             diaryList.add(
-                    new Diary(diaryEntity.getId(), diaryEntity.getTitle())
+                    new Diary(
+                            diaryEntity.getId(),
+                            diaryEntity.getTitle(),
+                            diaryEntity.getContent(),
+                            diaryEntity.getWriteDate()
+                    )
             );
         }
 
@@ -59,21 +64,8 @@ public class DiaryService {
         final DiaryEntity diaryEntity = diaryRepository.findById(id)
                 .orElseThrow();
 
-        Diary diary = new Diary(
-                diaryEntity.getId(),
-                diaryEntity.getTitle(),
-                diaryEntity.getContent(),
-                diaryEntity.getWriteDate()
-        );
-        diary.updateContent(content);
-
         diaryRepository.save(
-                new DiaryEntity(
-                        diary.getId(),
-                        diary.getTitle(),
-                        diary.getContent(),
-                        diary.getWriteDate()
-                )
+                Diary.updateContent(diaryEntity, content)
         );
     }
 

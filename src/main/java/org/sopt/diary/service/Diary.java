@@ -1,28 +1,18 @@
 package org.sopt.diary.service;
 
+import org.sopt.diary.repository.DiaryEntity;
+
 import java.time.LocalDate;
 
 public class Diary {
-    private long id;
+    private Long id;
     private String title;
     private String content;
     private LocalDate writeDate;
 
-    // 다이어리 post
-    public Diary(String title, String content, LocalDate writeDate) {
-        this.title = title;
-        this.content = content;
-        this.writeDate = writeDate;
-    }
-
-    // 다이어리 리스트 생성
-    public Diary(long id, String title) {
-        this.id = id;
-        this.title = title;
-    }
-
-    // 다이어리 상세 조회
-    public Diary(long id, String title, String content, LocalDate writeDate) {
+    public Diary(
+            Long id, String title, String content, LocalDate writeDate
+    ) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -45,7 +35,12 @@ public class Diary {
         return writeDate;
     }
 
-    public void updateContent(String content) {
-        this.content = content;
+    public static DiaryEntity updateContent(DiaryEntity diaryEntity, String newContent) {
+        return new DiaryEntity(
+                diaryEntity.getId(),
+                diaryEntity.getTitle(),
+                newContent,
+                diaryEntity.getWriteDate()
+        );
     }
 }
