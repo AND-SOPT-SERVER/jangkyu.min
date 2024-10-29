@@ -26,12 +26,11 @@ public class DiaryService {
     }
 
     public List<Diary> readDiaryList() {
-        // final 같은거 습관으로 달아주자. 왜 와이 DB 에서 가져오는 값은 불변해야 하니까
+        // DB 에서 가져오는 값은 불변해야 한다. final 습관으로 달아주자.
         // (1) repository 로 부터 DiaryEntity 가져옴
         final List<DiaryEntity> diaryEntityList = diaryRepository.findAll();
 
         // (2) DiaryEntity 를 Diary 로 변환해주는 작업
-        // 상위 10개만 뽑아주는 것을 Diary 도메인에서 해결해주는 방법은 없슬까 ..
         final List<Diary> diaryList = new ArrayList<>();
 
         for(DiaryEntity diaryEntity : diaryEntityList) {

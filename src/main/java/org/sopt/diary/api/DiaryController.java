@@ -1,5 +1,6 @@
 package org.sopt.diary.api;
 
+import org.sopt.diary.constant.DiaryConstant;
 import org.sopt.diary.service.Diary;
 import org.sopt.diary.service.DiaryService;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +22,8 @@ public class DiaryController {
     @PostMapping("/diary")
     void postDiary(@RequestBody DiaryCreateRequest diaryCreateRequest) {
         // DTO validation
-        if(diaryCreateRequest.getContent().length() > 30) {
-            System.err.println("30자 초과 !");
-            return;
+        if(diaryCreateRequest.getContent().length() > DiaryConstant.MAX_DIARY_LENGTH) {
+            throw new IllegalArgumentException();
         }
 
         diaryService.createDiary(
@@ -68,9 +68,8 @@ public class DiaryController {
     @PatchMapping("/diary/{id}")
     void patchDiary(@PathVariable Long id, @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
         // DTO validation
-        if(diaryUpdateRequest.getContent().length() > 30) {
-            System.err.println("30자 초과 !");
-            return;
+        if(diaryUpdateRequest.getContent().length() > DiaryConstant.MAX_DIARY_LENGTH) {
+            throw new IllegalArgumentException();
         }
 
         diaryService.updateDiary(id, diaryUpdateRequest.getContent());
