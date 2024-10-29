@@ -50,6 +50,14 @@ public class DiaryService {
             throw new IllegalStateException("5분내에 다이어리를 다시 작성할 수 없습니다.");
         }
 
+        if(diaryRepository.existsByTitle(
+                diary.getTitle()
+        )) {
+            // 이 역시 잘못된 요청이므로 400 Bad Request 를 걸어주면 좋을 것 같다 !
+            // 비즈니스적인 로직이 필요하므로 서비스에서 처리해준다.
+            throw new IllegalArgumentException("이미 있는 제목의 일기입니다.");
+        }
+
         diaryRepository.save(
                 new DiaryEntity(
                         diary.getTitle(),

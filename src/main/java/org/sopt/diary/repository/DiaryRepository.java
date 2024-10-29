@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     List<DiaryEntity> findTop10ByOrderByIdDesc();
     Optional<DiaryEntity> findTop1ByOrderByCreatedAtDesc();
+    Boolean existsByTitle(String title);
 }
