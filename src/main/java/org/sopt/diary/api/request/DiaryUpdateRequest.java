@@ -1,4 +1,4 @@
-package org.sopt.diary.api;
+package org.sopt.diary.api.request;
 
 public class DiaryUpdateRequest {
     private final String content;

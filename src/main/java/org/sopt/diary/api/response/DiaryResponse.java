@@ -1,4 +1,4 @@
-package org.sopt.diary.api;
+package org.sopt.diary.api.response;
 
 public class DiaryResponse {
     private final long id;

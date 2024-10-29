@@ -1,8 +1,13 @@
 package org.sopt.diary.api;
 
-import org.sopt.diary.constant.DiaryConstant;
+import org.sopt.diary.api.request.DiaryCreateRequest;
+import org.sopt.diary.api.request.DiaryUpdateRequest;
+import org.sopt.diary.api.response.DiaryDetailResponse;
+import org.sopt.diary.api.response.DiaryListResponse;
+import org.sopt.diary.api.response.DiaryResponse;
 import org.sopt.diary.service.Diary;
 import org.sopt.diary.service.DiaryService;
+import org.sopt.diary.validation.DiaryValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,17 +19,19 @@ import java.util.List;
 @RestController
 public class DiaryController {
     private final DiaryService diaryService;
+    private final DiaryValidator diaryValidator;
 
-    public DiaryController(DiaryService diaryService) {
+    public DiaryController(DiaryService diaryService, DiaryValidator diaryValidator) {
         this.diaryService = diaryService;
+        this.diaryValidator = diaryValidator;
     }
 
     @PostMapping("/diary")
     void postDiary(@RequestBody DiaryCreateRequest diaryCreateRequest) {
         // DTO validation
-        if(diaryCreateRequest.getContent().length() > DiaryConstant.MAX_DIARY_LENGTH) {
-            throw new IllegalArgumentException();
-        }
+        diaryValidator.validateDiaryLength(
+                diaryCreateRequest.getContent()
+        );
 
         diaryService.createDiary(
                 new Diary(
@@ -68,9 +75,9 @@ public class DiaryController {
     @PatchMapping("/diary/{id}")
     void patchDiary(@PathVariable Long id, @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
         // DTO validation
-        if(diaryUpdateRequest.getContent().length() > DiaryConstant.MAX_DIARY_LENGTH) {
-            throw new IllegalArgumentException();
-        }
+        diaryValidator.validateDiaryLength(
+                diaryUpdateRequest.getContent()
+        );
 
         diaryService.updateDiary(id, diaryUpdateRequest.getContent());
     }
