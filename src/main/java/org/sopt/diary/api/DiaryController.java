@@ -11,7 +11,7 @@ import org.sopt.diary.validation.DiaryValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public class DiaryController {
                         null,
                         diaryCreateRequest.getTitle(),
                         diaryCreateRequest.getContent(),
-                        LocalDate.now()
+                        LocalDateTime.now()
                 )
         );
     }
@@ -46,7 +46,7 @@ public class DiaryController {
     @GetMapping("/diaries")
     ResponseEntity<DiaryListResponse> getDiaryList() {
         // (1) Service 로 부터 가져온 DiaryList
-        List<Diary> diaryList = diaryService.readDiaryList();
+        List<Diary> diaryList = diaryService.getRecentDiaries();
 
         // (2) Client 와 협의한 interface 로 변환
         List<DiaryResponse> diaryResponseList = new ArrayList<>();
@@ -59,14 +59,14 @@ public class DiaryController {
 
     @GetMapping("/diary/{id}")
     ResponseEntity<DiaryDetailResponse> getDiaryDetail(@PathVariable Long id) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        Diary diary = diaryService.readDiaryDetail(id);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        Diary diary = diaryService.getDiaryById(id);
 
         DiaryDetailResponse diaryDetailResponse = new DiaryDetailResponse(
                 diary.getId(),
                 diary.getTitle(),
                 diary.getContent(),
-                diary.getWriteDate().format(formatter)
+                diary.getCreatedAt().format(formatter)
         );
 
         return ResponseEntity.ok(diaryDetailResponse);
@@ -79,7 +79,7 @@ public class DiaryController {
                 diaryUpdateRequest.getContent()
         );
 
-        diaryService.updateDiary(id, diaryUpdateRequest.getContent());
+        diaryService.updateDiaryContent(id, diaryUpdateRequest.getContent());
     }
 
     @DeleteMapping("/diary/{id}")

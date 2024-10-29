@@ -2,21 +2,21 @@ package org.sopt.diary.service;
 
 import org.sopt.diary.repository.DiaryEntity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Diary {
     private Long id;
     private String title;
     private String content;
-    private LocalDate writeDate;
+    private LocalDateTime createdAt;
 
     public Diary(
-            Long id, String title, String content, LocalDate writeDate
+            Long id, String title, String content, LocalDateTime createdAt
     ) {
         this.id = id;
         this.title = title;
         this.content = content;
-        this.writeDate = writeDate;
+        this.createdAt = createdAt;
     }
 
     public long getId() {
@@ -31,8 +31,8 @@ public class Diary {
         return content;
     }
 
-    public LocalDate getWriteDate() {
-        return writeDate;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     public static DiaryEntity updateContent(DiaryEntity diaryEntity, String newContent) {
@@ -40,7 +40,7 @@ public class Diary {
                 diaryEntity.getId(),
                 diaryEntity.getTitle(),
                 newContent,
-                diaryEntity.getWriteDate()
+                diaryEntity.getCreatedAt()
         );
     }
 }
