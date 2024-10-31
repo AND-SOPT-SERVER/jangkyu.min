@@ -1,10 +1,11 @@
 package org.sopt.diary.api;
 
-import org.sopt.diary.api.request.DiaryCreateRequest;
-import org.sopt.diary.api.request.DiaryUpdateRequest;
-import org.sopt.diary.api.response.DiaryDetailResponse;
-import org.sopt.diary.api.response.DiaryListResponse;
-import org.sopt.diary.api.response.DiaryResponse;
+import org.sopt.diary.api.dto.diary.request.DiaryCreateRequest;
+import org.sopt.diary.api.dto.diary.request.DiaryUpdateRequest;
+import org.sopt.diary.api.dto.diary.response.DiaryDetailResponse;
+import org.sopt.diary.api.dto.diary.response.DiaryDetailResponseWrapper;
+import org.sopt.diary.api.dto.diary.response.DiaryListResponse;
+import org.sopt.diary.api.dto.diary.response.DiaryResponse;
 import org.sopt.diary.service.Diary;
 import org.sopt.diary.service.DiaryService;
 import org.sopt.diary.validation.DiaryValidator;
@@ -27,38 +28,52 @@ public class DiaryController {
     }
 
     @PostMapping("/diary")
-    void postDiary(@RequestBody DiaryCreateRequest diaryCreateRequest) {
+    void postDiary(
+            @RequestHeader Long userId,
+            @RequestBody DiaryCreateRequest diaryCreateRequest
+    ) {
         // DTO validation
         diaryValidator.validateDiaryLength(
                 diaryCreateRequest.getContent()
         );
 
         diaryService.createDiary(
+                userId,
                 new Diary(
                         null,
                         diaryCreateRequest.getTitle(),
                         diaryCreateRequest.getContent(),
-                        LocalDateTime.now()
+                        diaryCreateRequest.getPrivate(),
+                        diaryCreateRequest.getCategory(),
+                        LocalDateTime.now(),
+                        null
                 )
         );
     }
 
     @GetMapping("/diaries")
     ResponseEntity<DiaryListResponse> getDiaryList() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
         // (1) Service 로 부터 가져온 DiaryList
         List<Diary> diaryList = diaryService.getRecentDiaries();
 
         // (2) Client 와 협의한 interface 로 변환
         List<DiaryResponse> diaryResponseList = new ArrayList<>();
         for(Diary diary : diaryList) {
-            diaryResponseList.add(new DiaryResponse(diary.getId(), diary.getTitle()));
+            diaryResponseList.add(new DiaryResponse(
+                    diary.getId(),
+                    "",
+                    diary.getTitle(),
+                    diary.getCreatedAt().format(formatter)
+            ));
         }
 
         return ResponseEntity.ok(new DiaryListResponse(diaryResponseList));
     }
 
     @GetMapping("/diary/{id}")
-    ResponseEntity<DiaryDetailResponse> getDiaryDetail(@PathVariable Long id) {
+    ResponseEntity<DiaryDetailResponseWrapper> getDiaryDetail(@PathVariable Long id) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         Diary diary = diaryService.getDiaryById(id);
 
@@ -66,24 +81,37 @@ public class DiaryController {
                 diary.getId(),
                 diary.getTitle(),
                 diary.getContent(),
-                diary.getCreatedAt().format(formatter)
+                diary.getCreatedAt().format(formatter),
+                diary.getCategory().getCategory()
+        );
+        DiaryDetailResponseWrapper detailResponseWrapper = new DiaryDetailResponseWrapper(
+                diaryDetailResponse
         );
 
-        return ResponseEntity.ok(diaryDetailResponse);
+        return ResponseEntity.ok(detailResponseWrapper);
     }
 
     @PatchMapping("/diary/{id}")
-    void patchDiary(@PathVariable Long id, @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
+    void patchDiary(
+            @RequestHeader Long userId,
+            @PathVariable Long id,
+            @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
         // DTO validation
         diaryValidator.validateDiaryLength(
                 diaryUpdateRequest.getContent()
         );
 
-        diaryService.updateDiaryContent(id, diaryUpdateRequest.getContent());
+        diaryService.updateDiaryContent(
+                userId, id, diaryUpdateRequest.getContent(), diaryUpdateRequest.getCategory()
+        );
     }
 
     @DeleteMapping("/diary/{id}")
-    void deleteDiary(@PathVariable Long id) {
-        diaryService.deleteDiary(id);
+    void deleteDiary(
+            @RequestHeader Long userId,
+            @PathVariable Long id
+    ) {
+        diaryService.deleteDiary(userId, id);
     }
 }
+
