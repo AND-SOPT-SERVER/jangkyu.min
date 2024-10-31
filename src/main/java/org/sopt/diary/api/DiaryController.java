@@ -28,7 +28,7 @@ public class DiaryController {
     }
 
     @PostMapping("/diary")
-    void postDiary(
+    public void postDiary(
             @RequestHeader Long userId,
             @RequestBody DiaryCreateRequest diaryCreateRequest
     ) {
@@ -52,7 +52,7 @@ public class DiaryController {
     }
 
     @GetMapping("/diaries")
-    ResponseEntity<DiaryListResponse> getDiaryList() {
+    public ResponseEntity<DiaryListResponse> getDiaryList() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         // (1) Service 로 부터 가져온 DiaryList
@@ -73,7 +73,7 @@ public class DiaryController {
     }
 
     @GetMapping("/diary/{id}")
-    ResponseEntity<DiaryDetailResponseWrapper> getDiaryDetail(@PathVariable Long id) {
+    public ResponseEntity<DiaryDetailResponseWrapper> getDiaryDetail(@PathVariable Long id) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         Diary diary = diaryService.getDiaryById(id);
 
@@ -92,7 +92,7 @@ public class DiaryController {
     }
 
     @PatchMapping("/diary/{id}")
-    void patchDiary(
+    public void patchDiary(
             @RequestHeader Long userId,
             @PathVariable Long id,
             @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
@@ -107,7 +107,7 @@ public class DiaryController {
     }
 
     @DeleteMapping("/diary/{id}")
-    void deleteDiary(
+    public void deleteDiary(
             @RequestHeader Long userId,
             @PathVariable Long id
     ) {
