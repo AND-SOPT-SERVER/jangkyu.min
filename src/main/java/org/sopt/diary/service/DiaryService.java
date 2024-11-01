@@ -1,17 +1,19 @@
 package org.sopt.diary.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.sopt.diary.constant.AuthConstant;
 import org.sopt.diary.constant.Category;
 import org.sopt.diary.constant.DiaryConstant;
+import org.sopt.diary.constant.SortConstant;
 import org.sopt.diary.repository.DiaryEntity;
 import org.sopt.diary.repository.DiaryRepository;
 import org.sopt.diary.repository.UserEntity;
 import org.sopt.diary.repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,21 +83,50 @@ public class DiaryService {
         );
     }
 
-    public List<Diary> getRecentDiaries() {
-        // DB 에서 가져오는 값은 불변해야 한다. final 습관으로 달아주자.
-        // (1) repository 로 부터 DiaryEntity 가져옴
-        final List<DiaryEntity> diaryEntityList = diaryRepository.findTop10ByOrderByIdDesc();
-
-        // (2) DiaryEntity 를 Diary 로 변환해주는 작업
-        final List<Diary> diaryList = new ArrayList<>();
-
-        for(DiaryEntity diaryEntity : diaryEntityList) {
-            diaryList.add(
-                    Diary.fromDiaryEntity(diaryEntity)
-            );
+    public List<Diary> getRecentDiaries(
+            Long userId, Category category, SortConstant sortConstant
+    ) {
+        // userId 가 없는 경우 isPrivate 이 true 인 일기만을 조회할 수 있음
+        if(userId == null) {
+            userId = AuthConstant.UNAUTHORIZED_USER.longValue();
         }
 
-        return diaryList;
+        // DB 에서 가져오는 값은 불변.
+        final List<DiaryEntity> diaryEntityList = switch (sortConstant) {
+            case LATEST -> diaryRepository.findTop10DiariesByCreatedAt(
+                    category, userId, PageRequest.of(0, 10)
+            );
+            case QUANTITY -> diaryRepository.findTop10DiariesByTitleLength(
+                    category, userId, PageRequest.of(0, 10)
+            );
+        };
+
+        return diaryEntityList.stream()
+                .map(diaryEntity -> Diary.fromDiaryEntity(diaryEntity))
+                .toList();
+    }
+
+    public List<Diary> getMyRecentDiaries(
+            Long userId, Category category, SortConstant sortConstant
+    ) {
+        // userId 가 없는 경우 isPrivate 이 true 인 일기만을 조회할 수 있음
+        if(userId == null) {
+            userId = AuthConstant.UNAUTHORIZED_USER.longValue();
+        }
+
+        // DB 에서 가져오는 값은 불변.
+        final List<DiaryEntity> diaryEntityList = switch (sortConstant) {
+            case LATEST -> diaryRepository.findMyTop10DiariesByCreatedAt(
+                    category, userId, PageRequest.of(0, 10)
+            );
+            case QUANTITY -> diaryRepository.findMyTop10DiariesByTitleLength(
+                    category, userId, PageRequest.of(0, 10)
+            );
+        };
+
+        return diaryEntityList.stream()
+                .map(diaryEntity -> Diary.fromDiaryEntity(diaryEntity))
+                .toList();
     }
 
     public Diary getDiaryById(Long id) {
