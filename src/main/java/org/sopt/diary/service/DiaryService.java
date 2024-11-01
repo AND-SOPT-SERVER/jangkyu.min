@@ -78,7 +78,7 @@ public class DiaryService {
         };
 
         return diaryEntityList.stream()
-                .map(diaryEntity -> Diary.fromDiaryEntity(diaryEntity))
+                .map(Diary::fromDiaryEntity)
                 .toList();
     }
 
@@ -99,7 +99,7 @@ public class DiaryService {
         };
 
         return diaryEntityList.stream()
-                .map(diaryEntity -> Diary.fromDiaryEntity(diaryEntity))
+                .map(Diary::fromDiaryEntity)
                 .toList();
     }
 

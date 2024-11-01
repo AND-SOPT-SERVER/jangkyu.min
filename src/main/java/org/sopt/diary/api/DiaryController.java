@@ -143,7 +143,7 @@ public class DiaryController {
         List<DiaryResponse> diaryResponseList = diaryList.stream()
                 .map(diary -> new DiaryResponse(
                         diary.getId(),
-                        "",
+                        diary.getUser().getNickname(),
                         diary.getTitle(),
                         diary.getCreatedAt().format(formatter)
                 ))
