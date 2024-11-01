@@ -27,34 +27,6 @@ public class DiaryService {
         this.userRepository = userRepository;
     }
 
-    private UserEntity getUserEntityById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저 입니다."));
-    }
-
-    private DiaryEntity getDiaryEntityById(Long id) {
-        return diaryRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 다이어리 입니다."));
-    }
-
-    private boolean isDiaryCreateInLimit() {
-        Optional<DiaryEntity> optionalDiaryEntity = diaryRepository.findTop1ByOrderByCreatedAtDesc();
-
-        // DB 상에 Diary 가 있다면 비교, 없다면 바로 저장
-        if(optionalDiaryEntity.isPresent()) {
-            DiaryEntity diaryEntity = optionalDiaryEntity.get();
-
-            long betweenMinutes = Duration.between(
-                    diaryEntity.getCreatedAt(), LocalDateTime.now()
-            ).toMinutes();
-
-            // betweenMinutes 이 DIARY_WRITE_LIMIT 보다 작다면 제한시간 내에 적은 것이므로 true 를 반환함
-            return betweenMinutes < DiaryConstant.DIARY_WRITE_LIMIT;
-        } else {
-            return false;
-        }
-    }
-
     public void createDiary(Long userId, Diary diary) {
         final UserEntity userEntity = getUserEntityById(userId);
 
@@ -86,9 +58,13 @@ public class DiaryService {
     public List<Diary> getRecentDiaries(
             Long userId, Category category, SortConstant sortConstant
     ) {
-        // userId 가 없는 경우 isPrivate 이 true 인 일기만을 조회할 수 있음
         if(userId == null) {
-            userId = AuthConstant.UNAUTHORIZED_USER.longValue();
+            // userId 가 없는 경우 isPrivate 이 true 인 일기만을 조회할 수 있음
+            userId = AuthConstant.UNAUTHORIZED_USER_ID.longValue();
+        } else {
+            // userId 가 있는 경우 검증 로직 진행.
+            UserEntity userEntity = getUserEntityById(userId);
+            userId = userEntity.getId();
         }
 
         // DB 에서 가져오는 값은 불변.
@@ -109,18 +85,16 @@ public class DiaryService {
     public List<Diary> getMyRecentDiaries(
             Long userId, Category category, SortConstant sortConstant
     ) {
-        // userId 가 없는 경우 isPrivate 이 true 인 일기만을 조회할 수 있음
-        if(userId == null) {
-            userId = AuthConstant.UNAUTHORIZED_USER.longValue();
-        }
+        // userId 가 없는 경우 MyRecentDiaries 조회가 불가능함.
+        UserEntity userEntity = getUserEntityById(userId);
 
         // DB 에서 가져오는 값은 불변.
         final List<DiaryEntity> diaryEntityList = switch (sortConstant) {
             case LATEST -> diaryRepository.findMyTop10DiariesByCreatedAt(
-                    category, userId, PageRequest.of(0, 10)
+                    category, userEntity.getId(), PageRequest.of(0, 10)
             );
             case QUANTITY -> diaryRepository.findMyTop10DiariesByTitleLength(
-                    category, userId, PageRequest.of(0, 10)
+                    category, userEntity.getId(), PageRequest.of(0, 10)
             );
         };
 
@@ -141,6 +115,8 @@ public class DiaryService {
         final UserEntity userEntity = getUserEntityById(userId);
         final DiaryEntity diaryEntity = getDiaryEntityById(id);
 
+        validateUserCanAccessDiary(userEntity, diaryEntity);
+
         diaryRepository.save(
                 Diary.updateContent(diaryEntity, content, category)
         );
@@ -150,7 +126,45 @@ public class DiaryService {
         final UserEntity userEntity = getUserEntityById(userId);
         final DiaryEntity diaryEntity = getDiaryEntityById(id);
 
+        validateUserCanAccessDiary(userEntity, diaryEntity);
+
         diaryRepository.delete(diaryEntity);
     }
+
+    private UserEntity getUserEntityById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저 입니다."));
+    }
+
+    private DiaryEntity getDiaryEntityById(Long id) {
+        return diaryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 다이어리 입니다."));
+    }
+
+    private boolean isDiaryCreateInLimit() {
+        Optional<DiaryEntity> optionalDiaryEntity = diaryRepository.findTop1ByOrderByCreatedAtDesc();
+
+        // DB 상에 Diary 가 있다면 비교, 없다면 바로 저장
+        if(optionalDiaryEntity.isPresent()) {
+            DiaryEntity diaryEntity = optionalDiaryEntity.get();
+
+            long betweenMinutes = Duration.between(
+                    diaryEntity.getCreatedAt(), LocalDateTime.now()
+            ).toMinutes();
+
+            // betweenMinutes 이 DIARY_WRITE_LIMIT 보다 작다면 제한시간 내에 적은 것이므로 true 를 반환함
+            return betweenMinutes < DiaryConstant.DIARY_WRITE_LIMIT;
+        } else {
+            return false;
+        }
+    }
+
+    // 유저 검증 로직 추가
+    private void validateUserCanAccessDiary(UserEntity userEntity, DiaryEntity diaryEntity) {
+        if (!diaryEntity.getUserEntity().equals(userEntity)) {
+            throw new SecurityException("해당 일기에 접근할 권한이 없습니다.");
+        }
+    }
+
 }
 

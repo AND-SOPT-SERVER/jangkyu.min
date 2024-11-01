@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -62,55 +61,29 @@ public class DiaryController {
         // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
         Category category = Category.of(categoryUrl);
         SortConstant sortConstant = SortConstant.of(sortUrl);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        // (1) Service 로 부터 가져온 DiaryList
         List<Diary> diaryList = diaryService.getRecentDiaries(
                 userId, category, sortConstant
         );
 
-        // (2) Client 와 협의한 interface 로 변환
-        List<DiaryResponse> diaryResponseList = new ArrayList<>();
-        for(Diary diary : diaryList) {
-            diaryResponseList.add(new DiaryResponse(
-                    diary.getId(),
-                    "",
-                    diary.getTitle(),
-                    diary.getCreatedAt().format(formatter)
-            ));
-        }
-
-        return ResponseEntity.ok(new DiaryListResponse(diaryResponseList));
+        return ResponseEntity.ok(buildDiaryListResponse(diaryList));
     }
 
     @GetMapping("/diaries/my")
     public ResponseEntity<DiaryListResponse> getMyDiaryList(
-            @RequestHeader(required = false) Long userId,
+            @RequestHeader Long userId,
             @RequestParam(defaultValue = "all") String categoryUrl,
             @RequestParam(defaultValue = "latest") String sortUrl
     ) {
         // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
         Category category = Category.of(categoryUrl);
         SortConstant sortConstant = SortConstant.of(sortUrl);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        // (1) Service 로 부터 가져온 DiaryList
-        List<Diary> diaryList = diaryService.getRecentDiaries(
+        List<Diary> diaryList = diaryService.getMyRecentDiaries(
                 userId, category, sortConstant
         );
 
-        // (2) Client 와 협의한 interface 로 변환
-        List<DiaryResponse> diaryResponseList = new ArrayList<>();
-        for(Diary diary : diaryList) {
-            diaryResponseList.add(new DiaryResponse(
-                    diary.getId(),
-                    "",
-                    diary.getTitle(),
-                    diary.getCreatedAt().format(formatter)
-            ));
-        }
-
-        return ResponseEntity.ok(new DiaryListResponse(diaryResponseList));
+        return ResponseEntity.ok(buildDiaryListResponse(diaryList));
     }
 
     @GetMapping("/diary/{id}")
@@ -154,4 +127,21 @@ public class DiaryController {
     ) {
         diaryService.deleteDiary(userId, id);
     }
+
+    // 중복되는 코드 하나의 private 함수로 묶어줌
+    private DiaryListResponse buildDiaryListResponse(List<Diary> diaryList) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        List<DiaryResponse> diaryResponseList = diaryList.stream()
+                .map(diary -> new DiaryResponse(
+                        diary.getId(),
+                        "",
+                        diary.getTitle(),
+                        diary.getCreatedAt().format(formatter)
+                ))
+                .toList();
+
+        return new DiaryListResponse(diaryResponseList);
+    }
+
 }

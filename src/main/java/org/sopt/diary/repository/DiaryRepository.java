@@ -19,8 +19,8 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
-            "WHERE d.category = :category " +
-            "AND (u.id = :userId OR d.isPrivate = false) " +
+            "WHERE (:category = 'ALL' OR :category = d.category) " +
+            "AND (:userId = u.id OR d.isPrivate = false) " +
             "ORDER BY d.createdAt DESC"
     )
     List<DiaryEntity> findTop10DiariesByCreatedAt(
@@ -32,8 +32,8 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
-            "WHERE d.category = :category " +
-            "AND (u.id = :userId OR d.isPrivate = false) " +
+            "WHERE (:category = 'ALL' OR :category = d.category) " +
+            "AND (:userId = u.id OR d.isPrivate = false) " +
             "ORDER BY LENGTH(d.title) DESC"
     )
     List<DiaryEntity> findTop10DiariesByTitleLength(
@@ -45,8 +45,8 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
                     "FROM DiaryEntity d JOIN d.userEntity u " +
-                    "WHERE d.category = :category " +
-                    "AND u.id = :userId " +
+                    "WHERE (:category = 'ALL' OR :category = d.category) " +
+                    "AND :userId = u.id " +
                     "ORDER BY d.createdAt DESC"
     )
     List<DiaryEntity> findMyTop10DiariesByCreatedAt(
@@ -58,8 +58,8 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
                     "FROM DiaryEntity d JOIN d.userEntity u " +
-                    "WHERE d.category = :category " +
-                    "AND u.id = :userId " +
+                    "WHERE (:category = 'ALL' OR :category = d.category) " +
+                    "AND :userId = u.id " +
                     "ORDER BY LENGTH(d.title) DESC"
     )
     List<DiaryEntity> findMyTop10DiariesByTitleLength(
