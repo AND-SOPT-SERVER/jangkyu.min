@@ -6,10 +6,10 @@ public class DiaryCreateRequest {
     private final String title;
     private final String content;
     private final Boolean isPrivate;
-    private final Category category;
+    private final String category;
 
     public DiaryCreateRequest(
-            String title, String content, Boolean isPrivate, Category category
+            String title, String content, Boolean isPrivate, String category
     ) {
         this.title = title;
         this.content = content;
@@ -29,7 +29,7 @@ public class DiaryCreateRequest {
         return isPrivate;
     }
 
-    public Category getCategory() {
+    public String getCategory() {
         return category;
     }
 }

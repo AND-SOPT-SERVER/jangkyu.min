@@ -6,4 +6,8 @@ public class DiaryDetailResponseWrapper {
     public DiaryDetailResponseWrapper(DiaryDetailResponse diary) {
         this.diary = diary;
     }
+
+    public DiaryDetailResponse getDiary() {
+        return diary;
+    }
 }

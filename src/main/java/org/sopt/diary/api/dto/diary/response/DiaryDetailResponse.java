@@ -16,4 +16,24 @@ public class DiaryDetailResponse {
         this.createdAt = createdAt;
         this.category = category;
     }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getCategory() {
+        return category;
+    }
 }
