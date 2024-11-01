@@ -8,4 +8,8 @@ public class DiaryListResponse {
     public DiaryListResponse(List<DiaryResponse> diaries) {
         this.diaries = diaries;
     }
+
+    public List<DiaryResponse> getDiaries() {
+        return diaries;
+    }
 }

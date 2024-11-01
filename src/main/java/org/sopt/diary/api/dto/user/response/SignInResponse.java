@@ -11,4 +11,8 @@ public class SignInResponse {
     public SignInResponse(Long userId) {
         this.userId = userId;
     }
+
+    public Long getUserId() {
+        return userId;
+    }
 }
