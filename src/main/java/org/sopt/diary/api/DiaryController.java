@@ -45,7 +45,7 @@ public class DiaryController {
                         diaryCreateRequest.getTitle(),
                         diaryCreateRequest.getContent(),
                         diaryCreateRequest.getPrivate(),
-                        diaryCreateRequest.getCategory(),
+                        Category.of(diaryCreateRequest.getCategory()),
                         LocalDateTime.now(),
                         null
                 )
@@ -61,6 +61,10 @@ public class DiaryController {
         // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
         Category category = Category.of(categoryUrl);
         SortConstant sortConstant = SortConstant.of(sortUrl);
+
+        if(categoryUrl.equals("all")) {
+            category = null;
+        }
 
         List<Diary> diaryList = diaryService.getRecentDiaries(
                 userId, category, sortConstant
@@ -78,6 +82,10 @@ public class DiaryController {
         // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
         Category category = Category.of(categoryUrl);
         SortConstant sortConstant = SortConstant.of(sortUrl);
+
+        if(categoryUrl.equals("all")) {
+            category = null;
+        }
 
         List<Diary> diaryList = diaryService.getMyRecentDiaries(
                 userId, category, sortConstant
@@ -116,7 +124,7 @@ public class DiaryController {
         );
 
         diaryService.updateDiaryContent(
-                userId, id, diaryUpdateRequest.getContent(), diaryUpdateRequest.getCategory()
+                userId, id, diaryUpdateRequest.getContent(), Category.of(diaryUpdateRequest.getCategory())
         );
     }
 

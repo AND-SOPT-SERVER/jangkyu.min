@@ -19,7 +19,7 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
-            "WHERE (:category = 'ALL' OR :category = d.category) " +
+            "WHERE (:category IS NULL OR :category = d.category) " +
             "AND (:userId = u.id OR d.isPrivate = false) " +
             "ORDER BY d.createdAt DESC"
     )
@@ -32,7 +32,7 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
-            "WHERE (:category = 'ALL' OR :category = d.category) " +
+            "WHERE (:category IS NULL OR :category = d.category) " +
             "AND (:userId = u.id OR d.isPrivate = false) " +
             "ORDER BY LENGTH(d.title) DESC"
     )
@@ -45,7 +45,7 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
                     "FROM DiaryEntity d JOIN d.userEntity u " +
-                    "WHERE (:category = 'ALL' OR :category = d.category) " +
+                    "WHERE (:category IS NULL OR :category = d.category) " +
                     "AND :userId = u.id " +
                     "ORDER BY d.createdAt DESC"
     )
@@ -58,7 +58,7 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     @Query(
             "SELECT d.id, u.nickname, d.title, d.createdAt " +
                     "FROM DiaryEntity d JOIN d.userEntity u " +
-                    "WHERE (:category = 'ALL' OR :category = d.category) " +
+                    "WHERE (:category IS NULL OR :category = d.category) " +
                     "AND :userId = u.id " +
                     "ORDER BY LENGTH(d.title) DESC"
     )

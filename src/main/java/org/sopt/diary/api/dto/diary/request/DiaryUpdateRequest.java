@@ -4,9 +4,9 @@ import org.sopt.diary.constant.Category;
 
 public class DiaryUpdateRequest {
     private final String content;
-    private final Category category;
+    private final String category;
 
-    public DiaryUpdateRequest(String content, Category category) {
+    public DiaryUpdateRequest(String content, String category) {
         this.content = content;
         this.category = category;
     }
@@ -15,7 +15,7 @@ public class DiaryUpdateRequest {
         return content;
     }
 
-    public Category getCategory() {
+    public String getCategory() {
         return category;
     }
 }
