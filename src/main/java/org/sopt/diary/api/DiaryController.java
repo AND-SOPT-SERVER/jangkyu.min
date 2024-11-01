@@ -6,6 +6,8 @@ import org.sopt.diary.api.dto.diary.response.DiaryDetailResponse;
 import org.sopt.diary.api.dto.diary.response.DiaryDetailResponseWrapper;
 import org.sopt.diary.api.dto.diary.response.DiaryListResponse;
 import org.sopt.diary.api.dto.diary.response.DiaryResponse;
+import org.sopt.diary.constant.Category;
+import org.sopt.diary.constant.SortConstant;
 import org.sopt.diary.service.Diary;
 import org.sopt.diary.service.DiaryService;
 import org.sopt.diary.validation.DiaryValidator;
@@ -52,11 +54,50 @@ public class DiaryController {
     }
 
     @GetMapping("/diaries")
-    public ResponseEntity<DiaryListResponse> getDiaryList() {
+    public ResponseEntity<DiaryListResponse> getDiaryList(
+            @RequestHeader(required = false) Long userId,
+            @RequestParam(defaultValue = "all") String categoryUrl,
+            @RequestParam(defaultValue = "latest") String sortUrl
+    ) {
+        // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
+        Category category = Category.of(categoryUrl);
+        SortConstant sortConstant = SortConstant.of(sortUrl);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         // (1) Service 로 부터 가져온 DiaryList
-        List<Diary> diaryList = diaryService.getRecentDiaries();
+        List<Diary> diaryList = diaryService.getRecentDiaries(
+                userId, category, sortConstant
+        );
+
+        // (2) Client 와 협의한 interface 로 변환
+        List<DiaryResponse> diaryResponseList = new ArrayList<>();
+        for(Diary diary : diaryList) {
+            diaryResponseList.add(new DiaryResponse(
+                    diary.getId(),
+                    "",
+                    diary.getTitle(),
+                    diary.getCreatedAt().format(formatter)
+            ));
+        }
+
+        return ResponseEntity.ok(new DiaryListResponse(diaryResponseList));
+    }
+
+    @GetMapping("/diaries/my")
+    public ResponseEntity<DiaryListResponse> getMyDiaryList(
+            @RequestHeader(required = false) Long userId,
+            @RequestParam(defaultValue = "all") String categoryUrl,
+            @RequestParam(defaultValue = "latest") String sortUrl
+    ) {
+        // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
+        Category category = Category.of(categoryUrl);
+        SortConstant sortConstant = SortConstant.of(sortUrl);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        // (1) Service 로 부터 가져온 DiaryList
+        List<Diary> diaryList = diaryService.getRecentDiaries(
+                userId, category, sortConstant
+        );
 
         // (2) Client 와 협의한 interface 로 변환
         List<DiaryResponse> diaryResponseList = new ArrayList<>();
@@ -114,4 +155,3 @@ public class DiaryController {
         diaryService.deleteDiary(userId, id);
     }
 }
-
