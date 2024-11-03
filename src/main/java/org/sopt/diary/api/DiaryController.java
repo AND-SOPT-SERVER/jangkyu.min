@@ -33,7 +33,10 @@ public class DiaryController {
             @RequestBody DiaryCreateRequest diaryCreateRequest
     ) {
         // DTO validation
-        diaryValidator.validateDiaryLength(
+        diaryValidator.validateDiaryTitleLength(
+                diaryCreateRequest.title()
+        );
+        diaryValidator.validateDiaryContentLength(
                 diaryCreateRequest.content()
         );
 
@@ -54,7 +57,7 @@ public class DiaryController {
         SortConstant sortConstant = SortConstant.of(sortUrl);
 
         if(categoryUrl.equals("all")) {
-            category = Category.ALL;
+            category = null;
         }
 
         List<DiaryEntity> diaryList = diaryService.getRecentDiaries(
@@ -113,7 +116,7 @@ public class DiaryController {
             @PathVariable Long id,
             @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
         // DTO validation
-        diaryValidator.validateDiaryLength(
+        diaryValidator.validateDiaryContentLength(
                 diaryUpdateRequest.content()
         );
 
