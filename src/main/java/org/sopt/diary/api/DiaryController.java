@@ -50,9 +50,11 @@ public class DiaryController {
     public ResponseEntity<DiaryListResponse> getDiaryList(
             @RequestHeader(required = false) Long userId,
             @RequestParam(defaultValue = "all") String categoryUrl,
-            @RequestParam(defaultValue = "latest") String sortUrl
+            @RequestParam(defaultValue = "latest") String sortUrl,
+            @RequestParam(defaultValue = "1") Integer page
     ) {
         // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
+        diaryValidator.validatePage(page);
         Category category = Category.of(categoryUrl);
         SortConstant sortConstant = SortConstant.of(sortUrl);
 
@@ -61,7 +63,7 @@ public class DiaryController {
         }
 
         List<DiaryEntity> diaryList = diaryService.getRecentDiaries(
-                userId, category, sortConstant
+                userId, category, sortConstant, page
         );
 
         return ResponseEntity.ok(buildDiaryListResponse(diaryList));
@@ -71,9 +73,11 @@ public class DiaryController {
     public ResponseEntity<DiaryListResponse> getMyDiaryList(
             @RequestHeader Long userId,
             @RequestParam(defaultValue = "all") String categoryUrl,
-            @RequestParam(defaultValue = "latest") String sortUrl
+            @RequestParam(defaultValue = "latest") String sortUrl,
+            @RequestParam(defaultValue = "1") Integer page
     ) {
         // category 와 sort 가 올바른지는 컨트롤러 수준에서 검증한다.
+        diaryValidator.validatePage(page);
         Category category = Category.of(categoryUrl);
         SortConstant sortConstant = SortConstant.of(sortUrl);
 
@@ -82,7 +86,7 @@ public class DiaryController {
         }
 
         List<DiaryEntity> diaryList = diaryService.getMyRecentDiaries(
-                userId, category, sortConstant
+                userId, category, sortConstant, page
         );
 
         return ResponseEntity.ok(buildDiaryListResponse(diaryList));

@@ -4,6 +4,7 @@ public class DiaryConstant {
     public static final Integer MAX_DIARY_LENGTH = 30;
     public static final Integer MAX_TITLE_LENGTH = 10;
     public static final Integer DIARY_WRITE_LIMIT = 0;
+    public static final Integer PAGE_SIZE = 10;
 
     // 생성자를 private 선언하는 이유 : 외부에서 인스턴스화하지 못하도록 방지
     DiaryConstant() {
