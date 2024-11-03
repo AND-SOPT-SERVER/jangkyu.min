@@ -1,6 +1,8 @@
 package org.sopt.diary.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.sopt.diary.api.dto.user.request.SignInRequest;
+import org.sopt.diary.api.dto.user.request.SignUpRequest;
 import org.sopt.diary.repository.UserEntity;
 import org.sopt.diary.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -13,20 +15,19 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public void signUp(User user) {
+    public void signUp(SignUpRequest signUpRequest) {
         userRepository.save(
                 new UserEntity(
-                        user.getLoginId(),
-                        user.getPassword(),
-                        user.getNickname()
+                        signUpRequest.getLoginId(),
+                        signUpRequest.getPassword(),
+                        signUpRequest.getNickname()
                 )
         );
     }
 
-    public User signIn(String userId, String password) {
-        UserEntity userEntity = userRepository.findUserEntityByLoginIdAndPassword(userId, password)
-                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저 입니다."));
-
-        return User.fromUserEntity(userEntity);
+    public UserEntity signIn(SignInRequest signInRequest) {
+        return userRepository.findUserEntityByLoginIdAndPassword(
+                signInRequest.getLoginId(), signInRequest.getPassword()
+                ).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저 입니다."));
     }
 }

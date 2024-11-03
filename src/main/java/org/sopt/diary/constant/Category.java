@@ -9,7 +9,7 @@ public enum Category {
     SCHOOL("school"),
     MOVIE("movie"),
     EXERCISE("exercise"),
-    ALL("all")
+    ALL(null)
     ;
     private final String category;
 

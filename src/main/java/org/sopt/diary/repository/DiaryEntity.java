@@ -62,6 +62,11 @@ public class DiaryEntity {
         this.userEntity = userEntity;
     }
 
+    public void updateContent(String newContent, Category newCategory) {
+        this.content = newContent;
+        this.category = newCategory;
+    }
+
     public Long getId() {
         return id;
     }

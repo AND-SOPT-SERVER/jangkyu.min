@@ -8,13 +8,12 @@ import org.sopt.diary.api.dto.diary.response.DiaryListResponse;
 import org.sopt.diary.api.dto.diary.response.DiaryResponse;
 import org.sopt.diary.constant.Category;
 import org.sopt.diary.constant.SortConstant;
-import org.sopt.diary.service.Diary;
+import org.sopt.diary.repository.DiaryEntity;
 import org.sopt.diary.service.DiaryService;
 import org.sopt.diary.validation.DiaryValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -35,20 +34,12 @@ public class DiaryController {
     ) {
         // DTO validation
         diaryValidator.validateDiaryLength(
-                diaryCreateRequest.getContent()
+                diaryCreateRequest.content()
         );
 
         diaryService.createDiary(
                 userId,
-                new Diary(
-                        null,
-                        diaryCreateRequest.getTitle(),
-                        diaryCreateRequest.getContent(),
-                        diaryCreateRequest.getPrivate(),
-                        Category.of(diaryCreateRequest.getCategory()),
-                        LocalDateTime.now(),
-                        null
-                )
+                diaryCreateRequest
         );
     }
 
@@ -63,10 +54,10 @@ public class DiaryController {
         SortConstant sortConstant = SortConstant.of(sortUrl);
 
         if(categoryUrl.equals("all")) {
-            category = null;
+            category = Category.ALL;
         }
 
-        List<Diary> diaryList = diaryService.getRecentDiaries(
+        List<DiaryEntity> diaryList = diaryService.getRecentDiaries(
                 userId, category, sortConstant
         );
 
@@ -87,7 +78,7 @@ public class DiaryController {
             category = null;
         }
 
-        List<Diary> diaryList = diaryService.getMyRecentDiaries(
+        List<DiaryEntity> diaryList = diaryService.getMyRecentDiaries(
                 userId, category, sortConstant
         );
 
@@ -95,16 +86,19 @@ public class DiaryController {
     }
 
     @GetMapping("/diary/{id}")
-    public ResponseEntity<DiaryDetailResponseWrapper> getDiaryDetail(@PathVariable Long id) {
+    public ResponseEntity<DiaryDetailResponseWrapper> getDiaryDetail(
+            @RequestHeader Long userId,
+            @PathVariable Long id
+    ) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        Diary diary = diaryService.getDiaryById(id);
+        DiaryEntity diaryEntity = diaryService.getDiaryDetail(userId, id);
 
         DiaryDetailResponse diaryDetailResponse = new DiaryDetailResponse(
-                diary.getId(),
-                diary.getTitle(),
-                diary.getContent(),
-                diary.getCreatedAt().format(formatter),
-                diary.getCategory().getCategory()
+                diaryEntity.getId(),
+                diaryEntity.getTitle(),
+                diaryEntity.getContent(),
+                diaryEntity.getCreatedAt().format(formatter),
+                diaryEntity.getCategory().getCategory()
         );
         DiaryDetailResponseWrapper detailResponseWrapper = new DiaryDetailResponseWrapper(
                 diaryDetailResponse
@@ -120,11 +114,13 @@ public class DiaryController {
             @RequestBody DiaryUpdateRequest diaryUpdateRequest) {
         // DTO validation
         diaryValidator.validateDiaryLength(
-                diaryUpdateRequest.getContent()
+                diaryUpdateRequest.content()
         );
 
         diaryService.updateDiaryContent(
-                userId, id, diaryUpdateRequest.getContent(), Category.of(diaryUpdateRequest.getCategory())
+                userId,
+                id,
+                diaryUpdateRequest
         );
     }
 
@@ -137,13 +133,13 @@ public class DiaryController {
     }
 
     // 중복되는 코드 하나의 private 함수로 묶어줌
-    private DiaryListResponse buildDiaryListResponse(List<Diary> diaryList) {
+    private DiaryListResponse buildDiaryListResponse(List<DiaryEntity> diaryList) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         List<DiaryResponse> diaryResponseList = diaryList.stream()
                 .map(diary -> new DiaryResponse(
                         diary.getId(),
-                        diary.getUser().getNickname(),
+                        diary.getUserEntity().getNickname(),
                         diary.getTitle(),
                         diary.getCreatedAt().format(formatter)
                 ))
