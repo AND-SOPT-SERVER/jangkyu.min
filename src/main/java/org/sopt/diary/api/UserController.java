@@ -3,7 +3,7 @@ package org.sopt.diary.api;
 import org.sopt.diary.api.dto.user.request.SignInRequest;
 import org.sopt.diary.api.dto.user.request.SignUpRequest;
 import org.sopt.diary.api.dto.user.response.SignInResponse;
-import org.sopt.diary.service.User;
+import org.sopt.diary.repository.UserEntity;
 import org.sopt.diary.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,24 +22,14 @@ public class UserController {
 
     @PostMapping("/signup")
     public void signUp(@RequestBody SignUpRequest signUpRequest) {
-        userService.signUp(
-                new User(
-                        null,
-                        signUpRequest.getLoginId(),
-                        signUpRequest.getPassword(),
-                        signUpRequest.getNickname()
-                )
-        );
+        userService.signUp(signUpRequest);
     }
 
     @PostMapping("/signin")
     public ResponseEntity<SignInResponse> signIn(@RequestBody SignInRequest signInRequest) {
-        User user = userService.signIn(
-                signInRequest.getLoginId(),
-                signInRequest.getPassword()
-        );
+        UserEntity userEntity = userService.signIn(signInRequest);
 
-        SignInResponse signInResponse = new SignInResponse(user.getId());
+        SignInResponse signInResponse = new SignInResponse(userEntity.getId());
 
         return ResponseEntity.ok(signInResponse);
     }

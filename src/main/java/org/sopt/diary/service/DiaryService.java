@@ -1,6 +1,8 @@
 package org.sopt.diary.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.sopt.diary.api.dto.diary.request.DiaryCreateRequest;
+import org.sopt.diary.api.dto.diary.request.DiaryUpdateRequest;
 import org.sopt.diary.constant.AuthConstant;
 import org.sopt.diary.constant.Category;
 import org.sopt.diary.constant.DiaryConstant;
@@ -11,6 +13,7 @@ import org.sopt.diary.repository.UserEntity;
 import org.sopt.diary.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -27,7 +30,11 @@ public class DiaryService {
         this.userRepository = userRepository;
     }
 
-    public void createDiary(Long userId, Diary diary) {
+    @Transactional
+    public void createDiary(
+            Long userId,
+            DiaryCreateRequest diaryCreateRequest
+    ) {
         final UserEntity userEntity = getUserEntityById(userId);
 
         // 5분안에 일기가 작성된다면 ? : 400 Bad Request 를 걸어주면 좋을 것 같다 !
@@ -38,24 +45,25 @@ public class DiaryService {
         // 이 역시 잘못된 요청이므로 400 Bad Request 를 걸어주면 좋을 것 같다 !
         // 비즈니스적인 로직이 필요하므로 서비스에서 처리해준다.
         if(diaryRepository.existsByTitle(
-                diary.getTitle()
+                diaryCreateRequest.title()
         )) {
             throw new IllegalArgumentException("이미 있는 제목의 일기입니다.");
         }
 
         diaryRepository.save(
                 new DiaryEntity(
-                        diary.getTitle(),
-                        diary.getContent(),
-                        diary.getPrivate(),
-                        diary.getCategory(),
-                        diary.getCreatedAt(),
+                        diaryCreateRequest.title(),
+                        diaryCreateRequest.content(),
+                        diaryCreateRequest.isPrivate(),
+                        Category.of(diaryCreateRequest.category()),
+                        LocalDateTime.now(),
                         userEntity
                 )
         );
     }
 
-    public List<Diary> getRecentDiaries(
+    @Transactional(readOnly = true)
+    public List<DiaryEntity> getRecentDiaries(
             Long userId, Category category, SortConstant sortConstant
     ) {
         if(userId == null) {
@@ -67,8 +75,7 @@ public class DiaryService {
             userId = userEntity.getId();
         }
 
-        // DB 에서 가져오는 값은 불변.
-        final List<DiaryEntity> diaryEntityList = switch (sortConstant) {
+        return switch (sortConstant) {
             case LATEST -> diaryRepository.findTop10DiariesByCreatedAt(
                     category, userId, PageRequest.of(0, 10)
             );
@@ -76,20 +83,17 @@ public class DiaryService {
                     category, userId, PageRequest.of(0, 10)
             );
         };
-
-        return diaryEntityList.stream()
-                .map(Diary::fromDiaryEntity)
-                .toList();
     }
 
-    public List<Diary> getMyRecentDiaries(
+    @Transactional(readOnly = true)
+    public List<DiaryEntity> getMyRecentDiaries(
             Long userId, Category category, SortConstant sortConstant
     ) {
         // userId 가 없는 경우 MyRecentDiaries 조회가 불가능함.
         UserEntity userEntity = getUserEntityById(userId);
 
         // DB 에서 가져오는 값은 불변.
-        final List<DiaryEntity> diaryEntityList = switch (sortConstant) {
+        return switch (sortConstant) {
             case LATEST -> diaryRepository.findMyTop10DiariesByCreatedAt(
                     category, userEntity.getId(), PageRequest.of(0, 10)
             );
@@ -97,31 +101,36 @@ public class DiaryService {
                     category, userEntity.getId(), PageRequest.of(0, 10)
             );
         };
-
-        return diaryEntityList.stream()
-                .map(Diary::fromDiaryEntity)
-                .toList();
     }
 
-    public Diary getDiaryById(Long id) {
+    public DiaryEntity getDiaryDetail(Long userId, Long id) {
         final DiaryEntity diaryEntity = getDiaryEntityById(id);
+        final UserEntity userEntity = getUserEntityById(userId);
 
-        return Diary.fromDiaryEntity(diaryEntity);
+        // diaryEntity 가 private 이라면 접근 가능한지 검증
+        if(diaryEntity.getPrivate()) {
+            validateUserCanAccessDiary(userEntity, diaryEntity);
+        }
+
+        return diaryEntity;
     }
 
+    @Transactional
     public void updateDiaryContent(
-            Long userId, Long id, String content, Category category
+            Long userId, Long id, DiaryUpdateRequest diaryUpdateRequest
     ) {
         final UserEntity userEntity = getUserEntityById(userId);
         final DiaryEntity diaryEntity = getDiaryEntityById(id);
 
         validateUserCanAccessDiary(userEntity, diaryEntity);
 
-        diaryRepository.save(
-                Diary.updateContent(diaryEntity, content, category)
+        diaryEntity.updateContent(
+                diaryUpdateRequest.content(),
+                diaryEntity.getCategory()
         );
     }
 
+    @Transactional
     public void deleteDiary(Long userId, Long id) {
         final UserEntity userEntity = getUserEntityById(userId);
         final DiaryEntity diaryEntity = getDiaryEntityById(id);
@@ -141,6 +150,7 @@ public class DiaryService {
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 다이어리 입니다."));
     }
 
+    // 다이어리가 제한시간 내에 작성되었는지 검증하는 메서드
     private boolean isDiaryCreateInLimit() {
         Optional<DiaryEntity> optionalDiaryEntity = diaryRepository.findTop1ByOrderByCreatedAtDesc();
 
