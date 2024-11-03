@@ -64,7 +64,7 @@ public class DiaryService {
 
     @Transactional(readOnly = true)
     public List<DiaryEntity> getRecentDiaries(
-            Long userId, Category category, SortConstant sortConstant
+            Long userId, Category category, SortConstant sortConstant, Integer page
     ) {
         if(userId == null) {
             // userId 가 없는 경우 isPrivate 이 true 인 일기만을 조회할 수 있음
@@ -77,17 +77,17 @@ public class DiaryService {
 
         return switch (sortConstant) {
             case LATEST -> diaryRepository.findTop10DiariesByCreatedAt(
-                    category, userId, PageRequest.of(0, 10)
+                    category, userId, PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
             );
             case QUANTITY -> diaryRepository.findTop10DiariesByTitleLength(
-                    category, userId, PageRequest.of(0, 10)
+                    category, userId, PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
             );
         };
     }
 
     @Transactional(readOnly = true)
     public List<DiaryEntity> getMyRecentDiaries(
-            Long userId, Category category, SortConstant sortConstant
+            Long userId, Category category, SortConstant sortConstant, Integer page
     ) {
         // userId 가 없는 경우 MyRecentDiaries 조회가 불가능함.
         UserEntity userEntity = getUserEntityById(userId);
@@ -95,10 +95,10 @@ public class DiaryService {
         // DB 에서 가져오는 값은 불변.
         return switch (sortConstant) {
             case LATEST -> diaryRepository.findMyTop10DiariesByCreatedAt(
-                    category, userEntity.getId(), PageRequest.of(0, 10)
+                    category, userEntity.getId(), PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
             );
             case QUANTITY -> diaryRepository.findMyTop10DiariesByTitleLength(
-                    category, userEntity.getId(), PageRequest.of(0, 10)
+                    category, userEntity.getId(), PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
             );
         };
     }
