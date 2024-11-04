@@ -3,20 +3,20 @@ package org.sopt.diary.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.sopt.diary.api.dto.diary.request.DiaryCreateRequest;
 import org.sopt.diary.api.dto.diary.request.DiaryUpdateRequest;
+import org.sopt.diary.api.dto.diary.response.DiaryListResponse;
+import org.sopt.diary.api.dto.diary.response.DiaryResponse;
 import org.sopt.diary.constant.AuthConstant;
 import org.sopt.diary.constant.Category;
 import org.sopt.diary.constant.DiaryConstant;
 import org.sopt.diary.constant.SortConstant;
-import org.sopt.diary.repository.DiaryEntity;
-import org.sopt.diary.repository.DiaryRepository;
-import org.sopt.diary.repository.UserEntity;
-import org.sopt.diary.repository.UserRepository;
+import org.sopt.diary.repository.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,7 +63,7 @@ public class DiaryService {
     }
 
     @Transactional(readOnly = true)
-    public List<DiaryEntity> getRecentDiaries(
+    public DiaryListResponse getRecentDiaries(
             Long userId, Category category, SortConstant sortConstant, Integer page
     ) {
         if(userId == null) {
@@ -76,17 +76,19 @@ public class DiaryService {
         }
 
         return switch (sortConstant) {
-            case LATEST -> diaryRepository.findTop10DiariesByCreatedAt(
+            case LATEST -> buildDiaryListResponse(
+                    diaryRepository.findTop10DiariesByCreatedAt(
                     category, userId, PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
-            );
-            case QUANTITY -> diaryRepository.findTop10DiariesByTitleLength(
+            ));
+            case QUANTITY -> buildDiaryListResponse(
+                    diaryRepository.findTop10DiariesByTitleLength(
                     category, userId, PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
-            );
+            ));
         };
     }
 
     @Transactional(readOnly = true)
-    public List<DiaryEntity> getMyRecentDiaries(
+    public DiaryListResponse getMyRecentDiaries(
             Long userId, Category category, SortConstant sortConstant, Integer page
     ) {
         // userId 가 없는 경우 MyRecentDiaries 조회가 불가능함.
@@ -94,12 +96,14 @@ public class DiaryService {
 
         // DB 에서 가져오는 값은 불변.
         return switch (sortConstant) {
-            case LATEST -> diaryRepository.findMyTop10DiariesByCreatedAt(
+            case LATEST -> buildDiaryListResponse(
+                    diaryRepository.findMyTop10DiariesByCreatedAt(
                     category, userEntity.getId(), PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
-            );
-            case QUANTITY -> diaryRepository.findMyTop10DiariesByTitleLength(
+            ));
+            case QUANTITY -> buildDiaryListResponse(
+                    diaryRepository.findMyTop10DiariesByTitleLength(
                     category, userEntity.getId(), PageRequest.of(page - 1, DiaryConstant.PAGE_SIZE)
-            );
+            ));
         };
     }
 
@@ -174,6 +178,22 @@ public class DiaryService {
         if (!diaryEntity.getUserEntity().equals(userEntity)) {
             throw new SecurityException("해당 일기에 접근할 권한이 없습니다.");
         }
+    }
+
+    // DB 에서 가져온 DiaryListProjection 을 DiaryListResponse 로 전환
+    private DiaryListResponse buildDiaryListResponse(final List<DiaryListProjection> diaryList) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        List<DiaryResponse> diaryResponseList = diaryList.stream()
+                .map(diary -> new DiaryResponse(
+                        diary.getId(),
+                        diary.getNickname(),
+                        diary.getTitle(),
+                        diary.getCreatedAt().format(formatter)
+                ))
+                .toList();
+
+        return new DiaryListResponse(diaryResponseList);
     }
 
 }

@@ -17,52 +17,52 @@ public interface DiaryRepository extends JpaRepository<DiaryEntity, Long> {
     Boolean existsByTitle(String title);
 
     @Query(
-            "SELECT d " +
+            "SELECT d.id AS id, u.nickname AS nickname, d.title AS title, d.createdAt AS createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
             "WHERE (:category IS NULL OR :category = d.category) " +
             "AND (:userId = u.id OR d.isPrivate = false) " +
             "ORDER BY d.createdAt DESC"
     )
-    List<DiaryEntity> findTop10DiariesByCreatedAt(
+    List<DiaryListProjection> findTop10DiariesByCreatedAt(
             @Param("category") Category category,
             @Param("userId") Long userId,
             Pageable pageable
     );
 
     @Query(
-            "SELECT d " +
+            "SELECT d.id AS id, u.nickname AS nickname, d.title AS title, d.createdAt AS createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
             "WHERE (:category IS NULL OR :category = d.category) " +
             "AND (:userId = u.id OR d.isPrivate = false) " +
             "ORDER BY LENGTH(d.title) DESC"
     )
-    List<DiaryEntity> findTop10DiariesByTitleLength(
+    List<DiaryListProjection> findTop10DiariesByTitleLength(
             @Param("category") Category category,
             @Param("userId") Long userId,
             Pageable pageable
     );
 
     @Query(
-            "SELECT d " +
+            "SELECT d.id AS id, u.nickname AS nickname, d.title AS title, d.createdAt AS createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
             "WHERE (:category IS NULL OR :category = d.category) " +
             "AND :userId = u.id " +
             "ORDER BY d.createdAt DESC"
     )
-    List<DiaryEntity> findMyTop10DiariesByCreatedAt(
+    List<DiaryListProjection> findMyTop10DiariesByCreatedAt(
             @Param("category") Category category,
             @Param("userId") Long userId,
             Pageable pageable
     );
 
     @Query(
-            "SELECT d " +
+            "SELECT d.id AS id, u.nickname AS nickname, d.title AS title, d.createdAt AS createdAt " +
             "FROM DiaryEntity d JOIN d.userEntity u " +
             "WHERE (:category IS NULL OR :category = d.category) " +
             "AND :userId = u.id " +
             "ORDER BY LENGTH(d.title) DESC"
     )
-    List<DiaryEntity> findMyTop10DiariesByTitleLength(
+    List<DiaryListProjection> findMyTop10DiariesByTitleLength(
             @Param("category") Category category,
             @Param("userId") Long userId,
             Pageable pageable
