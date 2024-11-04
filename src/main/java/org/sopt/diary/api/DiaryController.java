@@ -5,7 +5,6 @@ import org.sopt.diary.api.dto.diary.request.DiaryUpdateRequest;
 import org.sopt.diary.api.dto.diary.response.DiaryDetailResponse;
 import org.sopt.diary.api.dto.diary.response.DiaryDetailResponseWrapper;
 import org.sopt.diary.api.dto.diary.response.DiaryListResponse;
-import org.sopt.diary.api.dto.diary.response.DiaryResponse;
 import org.sopt.diary.constant.Category;
 import org.sopt.diary.constant.SortConstant;
 import org.sopt.diary.repository.DiaryEntity;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @RestController
 public class DiaryController {
@@ -62,11 +60,11 @@ public class DiaryController {
             category = null;
         }
 
-        List<DiaryEntity> diaryList = diaryService.getRecentDiaries(
+        final DiaryListResponse diaryList = diaryService.getRecentDiaries(
                 userId, category, sortConstant, page
         );
 
-        return ResponseEntity.ok(buildDiaryListResponse(diaryList));
+        return ResponseEntity.ok(diaryList);
     }
 
     @GetMapping("/diaries/my")
@@ -85,11 +83,11 @@ public class DiaryController {
             category = null;
         }
 
-        List<DiaryEntity> diaryList = diaryService.getMyRecentDiaries(
+        final DiaryListResponse diaryList = diaryService.getMyRecentDiaries(
                 userId, category, sortConstant, page
         );
 
-        return ResponseEntity.ok(buildDiaryListResponse(diaryList));
+        return ResponseEntity.ok(diaryList);
     }
 
     @GetMapping("/diary/{id}")
@@ -138,21 +136,4 @@ public class DiaryController {
     ) {
         diaryService.deleteDiary(userId, id);
     }
-
-    // 중복되는 코드 하나의 private 함수로 묶어줌
-    private DiaryListResponse buildDiaryListResponse(List<DiaryEntity> diaryList) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-        List<DiaryResponse> diaryResponseList = diaryList.stream()
-                .map(diary -> new DiaryResponse(
-                        diary.getId(),
-                        diary.getUserEntity().getNickname(),
-                        diary.getTitle(),
-                        diary.getCreatedAt().format(formatter)
-                ))
-                .toList();
-
-        return new DiaryListResponse(diaryResponseList);
-    }
-
 }
